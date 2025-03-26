@@ -12,12 +12,19 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (qrData: string, mpin: string) => Promise<void>;
   logout: () => void;
+  signIn: (credentials: { email: string; password: string }) => Promise<void>;
+  signUp: (credentials: { email: string; password: string }) => Promise<void>;
+  error: string | null;
+  loading: boolean;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const login = useCallback(async (qrData: string, mpin: string) => {
     try {
@@ -43,13 +50,80 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const signIn = useCallback(async (credentials: { email: string; password: string }) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      // TODO: Implement actual API call
+      const response = await new Promise<User>((resolve, reject) => {
+        setTimeout(() => {
+          if (credentials.email && credentials.password) {
+            resolve({
+              id: '1',
+              name: 'John Doe',
+              points: 100,
+            });
+          } else {
+            reject(new Error('Invalid credentials'));
+          }
+        }, 1000);
+      });
+
+      setUser(response);
+      localStorage.setItem('user', JSON.stringify(response));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Authentication failed');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const signUp = useCallback(async (credentials: { email: string; password: string }) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      // TODO: Implement actual API call
+      const response = await new Promise<User>((resolve, reject) => {
+        setTimeout(() => {
+          if (credentials.email && credentials.password) {
+            resolve({
+              id: '1',
+              name: 'John Doe',
+              points: 100,
+            });
+          } else {
+            reject(new Error('Invalid credentials'));
+          }
+        }, 1000);
+      });
+
+      setUser(response);
+      localStorage.setItem('user', JSON.stringify(response));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Authentication failed');
+      throw error;  
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isAuthenticated: !!user,
+        loading: isLoading,
+        error,
         login,
         logout,
+        signIn,
+        signUp,
+        clearError,
       }}>
       {children}
     </AuthContext.Provider>

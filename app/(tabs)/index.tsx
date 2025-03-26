@@ -1,7 +1,7 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { router } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { Camera } from 'expo-camera';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -9,10 +9,12 @@ import { ThemedView } from '@/components/ThemedView';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { CameraView, BarcodeScanningResult } from 'expo-camera';
+
 export default function HomeScreen() {
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
-  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     const getBarCodeScannerPermissions = async () => {
@@ -27,42 +29,26 @@ export default function HomeScreen() {
 
   const handleBarCodeScanned = ({ data }: { data: string }) => {
     setScanned(true);
-    // Handle QR code data and navigate to MPIN entry
     router.push({
-      pathname: '/auth/mpin',
+      pathname: "/(auth)/mpin" as const,
       params: { qrData: data }
     });
   };
 
   if (!isAuthenticated) {
-    return (
-      <ThemedView style={styles.container}>
-        <ThemedText type="title">Welcome to Election Campaign</ThemedText>
-        {hasPermission === null ? (
-          <ThemedText>Requesting camera permission</ThemedText>
-        ) : hasPermission === false ? (
-          <ThemedText>No access to camera</ThemedText>
-        ) : (
-          <>
-            <CameraView
-              onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-              style={styles.scanner}
-            />
-            {scanned && (
-              <Button onPress={() => setScanned(false)}>
-                Tap to Scan Again
-              </Button>
-            )}
-          </>
-        )}
-      </ThemedView>
-    );
+    return <Redirect href="/(auth)/signin" />;
   }
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title">Welcome {user?.name}</ThemedText>
-      {/* Add dashboard content here */}
+      <ThemedText type="title">Welcome, {user?.name}</ThemedText>
+      <ThemedView style={styles.statsContainer}>
+        <ThemedText type="subtitle">Your Points: {user?.points}</ThemedText>
+        {/* Add more dashboard stats */}
+      </ThemedView>
+      <Button onPress={() => router.push('/(tabs)/scan')}>
+        Scan QR Code
+      </Button>
     </ThemedView>
   );
 }
@@ -78,5 +64,8 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     marginVertical: 20,
+  },
+  statsContainer: {
+    marginBottom: 20,
   },
 });

@@ -1,12 +1,13 @@
-import { Pressable, StyleSheet, PressableProps } from 'react-native';
+import { Pressable, StyleSheet, PressableProps, StyleProp, ViewStyle } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 
-interface ButtonProps extends PressableProps {
+interface ButtonProps extends Omit<PressableProps, 'style'> {
   children: string;
   variant?: 'primary' | 'secondary';
   disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function Button({ 
@@ -25,7 +26,7 @@ export function Button({
         styles.button,
         {
           backgroundColor: disabled 
-            ? colors.buttonDisabled 
+            ? colors.tint + '40'  // Using tint color with 40% opacity for disabled state
             : variant === 'primary' 
               ? colors.tint 
               : colors.background,
