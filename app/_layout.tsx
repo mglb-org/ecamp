@@ -9,11 +9,12 @@ export default function RootLayout() {
 
   useEffect(() => {
     // Redirect to auth screen by default
-    router.replace("/auth");
+    // router.replace("/auth");
   }, []);
 
   return (
     <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="auth" options={{ headerShown: false }} />
       <Stack.Screen
         name="dashboard"
