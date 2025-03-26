@@ -10,21 +10,17 @@ export default function Profile() {
           source={{ uri: 'https://via.placeholder.com/150' }}
         />
         <Text style={styles.name}>John Doe</Text>
-        <Text style={styles.bio}>Outdoor enthusiast | Trail explorer</Text>
+        <Text style={styles.bio}>Wise Member | Volunteer</Text>
       </View>
 
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>15</Text>
-          <Text style={styles.statLabel}>Trips</Text>
+          <Text style={styles.statLabel}>Events Attended</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>45</Text>
-          <Text style={styles.statLabel}>Days</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>8</Text>
-          <Text style={styles.statLabel}>Badges</Text>
+          <Text style={styles.statLabel}>Points Earned</Text>
         </View>
       </View>
 
