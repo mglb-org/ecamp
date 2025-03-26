@@ -1,6 +1,9 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from "@/hooks/useAuth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect } from "react";
 
 export default function Dashboard() {
     const router = useRouter();
@@ -11,6 +14,15 @@ export default function Dashboard() {
         { title: 'Points', icon: 'wallet-outline', route: '/points' },
         { title: 'Settings', icon: 'settings-outline', route: '/settings' },
     ];
+    const { user } = useAuth(); 
+
+    useEffect(() => {
+        const getUserData = async () => {
+            const userData = await AsyncStorage.getItem('user');
+            console.log(userData);
+        };
+        getUserData();
+    }, []);
 
     return (
         <ScrollView style={styles.container}>

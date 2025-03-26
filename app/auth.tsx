@@ -2,16 +2,17 @@ import { View, Text, TouchableOpacity, StyleSheet, ImageBackground, TextInput } 
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Auth() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const { signIn, loading, error } = useAuth();
 
   const handleLogin = () => {
-    // Add validation logic here
-    router.replace("/dashboard");
+    signIn({ email, password });
   };
 
   return (
@@ -37,6 +38,7 @@ export default function Auth() {
                 keyboardType="email-address"
               />
             </View>
+            {error && <Text style={styles.errorText}>{error}</Text>}
 
             <View style={styles.inputWrapper}>
               <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.7)" />
@@ -59,17 +61,21 @@ export default function Auth() {
                 />
               </TouchableOpacity>
             </View>
+            {error && <Text style={styles.errorText}>{error}</Text>}
           </View>
 
+          {error && <Text style={styles.errorText}>{error}</Text>}
+          
           <TouchableOpacity style={styles.forgotPassword}>
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.loginButton} 
+            style={[styles.loginButton, loading && styles.loginButtonDisabled]} 
             onPress={handleLogin}
+            disabled={loading}
           >
-            <Text style={styles.loginText}>Login</Text>
+            <Text style={styles.loginText}>{loading ? 'Logging in...' : 'Login'}</Text>
           </TouchableOpacity>
 
           <View style={styles.signupContainer}>
@@ -172,5 +178,16 @@ const styles = StyleSheet.create({
   signupLink: {
     color: '#4CAF50',
     fontWeight: '600',
+  },
+  errorText: {
+    color: '#ff6b6b',
+    fontSize: 14,
+    marginTop: -10,
+    marginBottom: 10,
+    marginLeft: 20,
+  },
+  loginButtonDisabled: {
+    backgroundColor: '#7fba82',
+    opacity: 0.7,
   },
 }); 
