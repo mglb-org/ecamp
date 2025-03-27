@@ -1,6 +1,7 @@
 import { Text, View, Pressable, ImageBackground, Dimensions, ScrollView } from "react-native";
 import { router } from 'expo-router';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+
 
 const { width } = Dimensions.get('window');
 

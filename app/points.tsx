@@ -1,57 +1,47 @@
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-
-const DUMMY_TRANSACTIONS = [
-  {
-    id: '1',
-    type: 'earned',
-    amount: 500,
-    description: 'Completed Summer Camp 2024',
-    date: '2024-06-20',
-    icon: 'trophy-outline',
-  },
-  {
-    id: '2',
-    type: 'spent',
-    amount: 200,
-    description: 'Registered for Weekend Hiking',
-    date: '2024-05-01',
-    icon: 'calendar-outline',
-  },
-  {
-    id: '3',
-    type: 'earned',
-    amount: 100,
-    description: 'Daily Check-in Bonus',
-    date: '2024-04-30',
-    icon: 'checkmark-circle-outline',
-  },
-  // Add more transactions as needed
-];
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
+import { useState } from "react";
 
 export default function Points() {
-  const totalPoints = DUMMY_TRANSACTIONS.reduce((acc, curr) => {
-    return acc + (curr.type === 'earned' ? curr.amount : -curr.amount);
-  }, 0);
+
+  const [totalPoints, setTotalPoints] = useState<number>(0);
+  const [pointsHistory, setPointsHistory] = useState<any[]>([]);
+  const { token, user } = useAuth();
+
+  useEffect(() => {
+    const fetchPoints = async () => {
+      const response = await fetch(`https://70e5-49-147-157-181.ngrok-free.app/api/points/${user?.id}/my-points`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const { data } = await response.json();
+      setTotalPoints(data.reduce((acc: number, curr: any) => acc + curr.points, 0));
+      setPointsHistory(data);
+    };
+    fetchPoints();
+  }, [user]);
 
   const renderTransaction = ({ item }: { item: any }) => (
     <View style={styles.transactionCard}>
       <View style={styles.transactionIcon}>
-        <Ionicons 
-          name={item.icon} 
-          size={24} 
-          color={item.type === 'earned' ? '#4CAF50' : '#FF5252'} 
+        <Ionicons
+          name={item.category === 'achievement' ? 'trophy-outline' : item.category === 'participation' ? 'checkmark-circle-outline' : item.category === 'bonus' ? 'gift-outline' : 'close-circle-outline'}
+          size={24}
+          color={item.category === 'penalty' ? '#FF5252' : '#4CAF50'}
         />
       </View>
       <View style={styles.transactionInfo}>
         <Text style={styles.transactionDescription}>{item.description}</Text>
-        <Text style={styles.transactionDate}>{item.date}</Text>
+        <Text style={styles.transactionDate}>{item.createdAt}</Text>
       </View>
       <Text style={[
         styles.transactionAmount,
-        { color: item.type === 'earned' ? '#4CAF50' : '#FF5252' }
+        { color: item.category === 'penalty' ? '#FF5252' : '#4CAF50' }
       ]}>
-        {item.type === 'earned' ? '+' : '-'}{item.amount}
+        {item.category === 'penalty' ? '-' : '+'}{item.points}
       </Text>
     </View>
   );
@@ -60,7 +50,7 @@ export default function Points() {
     <View style={styles.container}>
       <View style={styles.balanceCard}>
         <Text style={styles.balanceLabel}>Total Points</Text>
-        <Text style={styles.balanceAmount}>{totalPoints}</Text>
+        <Text style={styles.balanceAmount}>{totalPoints.toLocaleString() || 0}</Text>
         <View style={styles.balanceActions}>
           <TouchableOpacity style={styles.actionButton}>
             <Ionicons name="gift-outline" size={20} color="#4CAF50" />
@@ -76,7 +66,7 @@ export default function Points() {
       <View style={styles.transactionsContainer}>
         <Text style={styles.sectionTitle}>History</Text>
         <FlatList
-          data={DUMMY_TRANSACTIONS}
+          data={pointsHistory}
           renderItem={renderTransaction}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContainer}

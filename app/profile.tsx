@@ -1,7 +1,23 @@
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
+import { User } from "@/hooks/useProfile";
+import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Profile() {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const storage = await AsyncStorage.getItem('user');
+      if (storage) {
+        const userData = JSON.parse(storage);
+        setUser({ user: userData.user });
+      }
+    }
+    getUser();
+  }, []);
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -9,7 +25,7 @@ export default function Profile() {
           style={styles.avatar}
           source={{ uri: 'https://via.placeholder.com/150' }}
         />
-        <Text style={styles.name}>John Doe</Text>
+        <Text style={styles.name}>{user?.user?.name}</Text>
         <Text style={styles.bio}>Wise Member | Volunteer</Text>
       </View>
 
@@ -28,15 +44,15 @@ export default function Profile() {
         <Text style={styles.sectionTitle}>Personal Information</Text>
         <View style={styles.infoItem}>
           <Ionicons name="mail-outline" size={24} color="#666" />
-          <Text style={styles.infoText}>john.doe@example.com</Text>
+          <Text style={styles.infoText}>{user?.user?.email}</Text>
         </View>
         <View style={styles.infoItem}>
           <Ionicons name="call-outline" size={24} color="#666" />
-          <Text style={styles.infoText}>+1 234 567 890</Text>
+          <Text style={styles.infoText}>{user?.user?.phone}</Text>
         </View>
         <View style={styles.infoItem}>
           <Ionicons name="location-outline" size={24} color="#666" />
-          <Text style={styles.infoText}>San Francisco, CA</Text>
+          <Text style={styles.infoText}>{user?.user?.address}</Text>
         </View>
       </View>
 

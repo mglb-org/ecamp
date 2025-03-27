@@ -1,11 +1,13 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from "@/hooks/useAuth";
+import TotalPoints from "./components/TotalPoints";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect } from "react";
-
+import { useEffect, useState } from "react";
+import { User } from "@/hooks/useProfile";
+import PointCounts from "./components/PointCounts";
 export default function Dashboard() {
+    const [user, setUser] = useState<User | null>(null);
     const router = useRouter();
 
     const menuItems = [
@@ -14,14 +16,16 @@ export default function Dashboard() {
         { title: 'Points', icon: 'wallet-outline', route: '/points' },
         { title: 'Settings', icon: 'settings-outline', route: '/settings' },
     ];
-    const { user } = useAuth(); 
 
     useEffect(() => {
-        const getUserData = async () => {
-            const userData = await AsyncStorage.getItem('user');
-            console.log(userData);
-        };
-        getUserData();
+        const getUser = async () => {
+            const storage = await AsyncStorage.getItem('user');
+            if (storage) {
+                const userData = JSON.parse(storage);
+                setUser({ user: userData.user });
+            }
+        }
+        getUser();
     }, []);
 
     return (
@@ -29,14 +33,9 @@ export default function Dashboard() {
             <View style={styles.header}>
                 <View style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 5, marginRight: 15 }}>
                     <Text style={styles.greeting}>Welcome back,</Text>
-                    <Text style={styles.name}>Camper!</Text>
+                    <Text style={styles.name}>{user?.user?.name}!</Text>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, marginRight: 15 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Ionicons name="wallet" size={32} color="#FFD700" />
-                        <Text style={{ marginLeft: 4, fontWeight: '600', color: 'white', fontSize: 22 }}>2,450</Text>
-                    </View>
-                </View>
+                <TotalPoints userId={user?.user?.id || ''} />
             </View>
 
             <View style={styles.menuGrid}>
@@ -59,10 +58,7 @@ export default function Dashboard() {
                         <Text style={styles.statNumber}>5</Text>
                         <Text style={styles.statLabel}>Attended Events</Text>
                     </View>
-                    <View style={styles.statItem}>
-                        <Text style={styles.statNumber}>12</Text>
-                        <Text style={styles.statLabel}>Points Earned</Text>
-                    </View>
+                    <PointCounts />
                 </View>
             </View>
         </ScrollView>

@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface User {
+interface User { 
   id: string;
   name: string;
   points: number;
@@ -24,12 +24,14 @@ interface AuthContextType {
   error: string | null;
   loading: boolean;
   clearError: () => void;
+  token: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<AuthError>({});
   const [error, setError] = useState<string | null>(null);
@@ -55,21 +57,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      // Get CSRF token for signout
-      const csrfResponse = await fetch('https://ecamp-app.vercel.app/api/auth/csrf');
-      const { csrfToken } = await csrfResponse.json();
-
-      // Perform signout
-      await fetch('https://ecamp-app.vercel.app/api/auth/signout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ csrfToken }),
-      });
+      await AsyncStorage.removeItem('user');
 
       setUser(null);
-      await AsyncStorage.removeItem('user');
+      setToken(null);
+      router.replace("/");
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Signout failed');
     }
@@ -83,33 +75,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!validateForm(credentials.email, credentials.password)) {
         return;
       }
-      // First get CSRF token
-      const csrfResponse = await fetch('https://ecamp-app.vercel.app/api/auth/csrf');
-      const { csrfToken } = await csrfResponse.json();
 
-      // Sign in with credentials
-      const response = await fetch('https://ecamp-app.vercel.app/api/auth/signin/credentials', {
+      const response = await fetch(`https://70e5-49-147-157-181.ngrok-free.app/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...credentials,
-          csrfToken,
+          email: credentials.email,
+          password: credentials.password,
         }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Authentication failed');
-      }
-
-      // Get session after successful sign in
-      const sessionResponse = await fetch('https://ecamp-app.vercel.app/api/auth/session');
-      const userData: User = await sessionResponse.json();
+      
+      const userData = await response.json();
 
       if (userData) {
-        setUser(userData);
+        setUser(userData.user);
+        setToken(userData.token);
         await AsyncStorage.setItem('user', JSON.stringify(userData));
 
         router.replace("/dashboard");
@@ -129,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch('https://ecamp-app.vercel.app/api/auth/register', {
+      const response = await fetch(`https://70e5-49-147-157-181.ngrok-free.app/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -142,9 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(errorData.message || 'Registration failed');
       }
 
-      const userData: User = await response.json();
-      setUser(userData);
+      const userData: { user: User, token: string } = await response.json();
+      setUser(userData.user);
+      setToken(userData.token);
       await AsyncStorage.setItem('user', JSON.stringify(userData));
+
+      router.replace("/dashboard");
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Authentication failed');
       throw error;
@@ -155,6 +140,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearError = useCallback(() => {
     setError(null);
+  }, []);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const user = await AsyncStorage.getItem('user');
+      if (user) {
+        router.replace("/dashboard");
+      } else {
+        router.replace("/auth");
+      }
+    };
+    getUser();
   }, []);
 
   return (
@@ -168,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         clearError,
+        token,
       }}>
       {children}
     </AuthContext.Provider>

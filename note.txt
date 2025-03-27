@@ -1,0 +1,5 @@
+const { profile, isLoading, error, updateProfile } = useProfile();
+
+if (isLoading) return <LoadingSpinner />;
+if (error) return <ErrorMessage error={error} />;
+if (!profile) return <NoProfile />;

@@ -2,14 +2,17 @@ import { View, Text, StyleSheet, Switch, TouchableOpacity, ScrollView } from "re
 import { useRouter } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Settings() {
   const router = useRouter();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [location, setLocation] = useState(true);
+  const { logout } = useAuth();
 
   const handleLogout = () => {
+    logout();
     router.replace("/auth");
   };
 
